@@ -9,13 +9,14 @@ import java.util.Map;
 import itu.hatif.annotation.Controller;
 import itu.hatif.annotation.GetUrl;
 import itu.hatif.util.Mapping;
+import itu.hatif.util.UrlMethod;
 import itu.hatif.util.Util;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 public class FrontControllerServlet extends HttpServlet {
 
-    Map<String,Mapping> mapUrlsControllers;
+    Map<UrlMethod,Mapping> mapUrlsControllers;
 
     public void init() {
 
@@ -26,8 +27,7 @@ public class FrontControllerServlet extends HttpServlet {
 
         try {
 
-            List<Class<?>> listClasses =
-                    Util.getAllClasses(controllerPackage);
+            List<Class<?>> listClasses = Util.getAllClasses(controllerPackage);
 
             for (Class<?> clazz : listClasses) {
 
@@ -41,13 +41,16 @@ public class FrontControllerServlet extends HttpServlet {
                                     method.getAnnotation(GetUrl.class);
 
                             String url = annotation.url();
+                            String methode = annotation.method();
+
+                            UrlMethod url_methode = new UrlMethod(methode,url);
 
                             Mapping mapping = new Mapping(
                                     clazz.getName(),
                                     method.getName()
                             );
 
-                            mapUrlsControllers.put(url, mapping);
+                            mapUrlsControllers.put(url_methode, mapping);
                         }
                     }
                 }
@@ -81,7 +84,11 @@ public class FrontControllerServlet extends HttpServlet {
                         out.println("<body>");
                         
                         String url = request.getRequestURI().substring(request.getContextPath().length());
-                        Mapping mapping = mapUrlsControllers.get(url);
+                        String httpmethod = request.getMethod();
+
+                        UrlMethod methodUrl = new UrlMethod(httpmethod, url);
+
+                        Mapping mapping = mapUrlsControllers.get(methodUrl);
                         
         if(mapping != null) {
             try {
@@ -96,9 +103,10 @@ public class FrontControllerServlet extends HttpServlet {
                             if (method.isAnnotationPresent(GetUrl.class)) {
                                 
                                 GetUrl annotation = method.getAnnotation(GetUrl.class);
-                                String urlMethod = annotation.url();
+                                String urlAnnotation = annotation.url();
+                                String methodhttp = annotation.method();
 
-                                out.println("<p> -> Method : " + method.getName() + " - URL : " + urlMethod + "</p>");
+                                out.println("<p> -> Method : " + method.getName() + " - URL : " + methodhttp + "    / " + urlAnnotation + "</p>");
                             }
                         
                         }
