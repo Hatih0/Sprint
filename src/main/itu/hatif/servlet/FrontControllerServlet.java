@@ -91,6 +91,9 @@ public class FrontControllerServlet extends HttpServlet {
                         Mapping mapping = mapUrlsControllers.get(methodUrl);
                         
         if(mapping != null) {
+
+            invokeMethod(mapping);
+
             try {
                 Class<?> clazz = Class.forName(mapping.getClassName());
                 
@@ -122,6 +125,24 @@ public class FrontControllerServlet extends HttpServlet {
 
             out.println("</body>");
             out.println("</html>");
+    }
+
+    public void invokeMethod(Mapping mapping) {
+
+        try {
+
+            Class<?> clazz = Class.forName(mapping.getClassName());
+
+            Object controller = clazz.getDeclaredConstructor().newInstance();
+
+            Method method = clazz.getDeclaredMethod(mapping.getMethodName());
+
+            method.invoke(controller);
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 
 }
