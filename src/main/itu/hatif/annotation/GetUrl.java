@@ -9,4 +9,5 @@ import java.lang.annotation.*;;
 
 public @interface GetUrl {
     String url() default "";
+    String method() default "GET";
 }

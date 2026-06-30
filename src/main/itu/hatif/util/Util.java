@@ -13,7 +13,7 @@ public static List<Class<?>> getAllClasses(String packageName)
 
     List<Class<?>> classes = new ArrayList<>();
 
-    String path = packageName.replace('.', '/');
+    String path = packageName.replace('.','/');
 
     ClassLoader classLoader =
             Thread.currentThread().getContextClassLoader();
