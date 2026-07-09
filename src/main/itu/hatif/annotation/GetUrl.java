@@ -1,7 +1,7 @@
 package itu.hatif.annotation;
 
 
-import java.lang.annotation.*;;
+import java.lang.annotation.*;
 
 @Target(ElementType.METHOD)
 

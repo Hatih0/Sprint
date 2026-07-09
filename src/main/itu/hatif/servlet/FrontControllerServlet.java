@@ -18,47 +18,15 @@ public class FrontControllerServlet extends HttpServlet {
 
     Map<UrlMethod,Mapping> mapUrlsControllers;
 
-    public void init() {
+    @Override
+    public void init() throws ServletException{
+        
+        mapUrlsControllers = (Map<UrlMethod, Mapping>) getServletContext().getAttribute("mapUrlsControllers");
 
-    mapUrlsControllers = new HashMap<>();
-
-    String controllerPackage =
-            getServletContext().getInitParameter("controller-package");
-
-        try {
-
-            List<Class<?>> listClasses = Util.getAllClasses(controllerPackage);
-
-            for (Class<?> clazz : listClasses) {
-
-                if (clazz.isAnnotationPresent(Controller.class)) {
-
-                    for (Method method : clazz.getDeclaredMethods()) {
-
-                        if (method.isAnnotationPresent(GetUrl.class)) {
-
-                            GetUrl annotation =
-                                    method.getAnnotation(GetUrl.class);
-
-                            String url = annotation.url();
-                            String methode = annotation.method();
-
-                            UrlMethod url_methode = new UrlMethod(methode,url);
-
-                            Mapping mapping = new Mapping(
-                                    clazz.getName(),
-                                    method.getName()
-                            );
-
-                            mapUrlsControllers.put(url_methode, mapping);
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (mapUrlsControllers == null) {
+            throw new ServletException("Les routes n'ont pas ete chargees.");
         }
+
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -92,9 +60,10 @@ public class FrontControllerServlet extends HttpServlet {
                         
         if(mapping != null) {
 
-            invokeMethod(mapping);
-
+            
             try {
+
+                invokeMethod(mapping);
                 Class<?> clazz = Class.forName(mapping.getClassName());
                 
                         out.println("<h1> Controller : " + clazz.getSimpleName() + "</h1>");
