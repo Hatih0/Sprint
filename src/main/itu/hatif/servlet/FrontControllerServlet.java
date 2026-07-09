@@ -9,6 +9,7 @@ import java.util.Map;
 import itu.hatif.annotation.Controller;
 import itu.hatif.annotation.GetUrl;
 import itu.hatif.util.Mapping;
+import itu.hatif.util.ModelAndView;
 import itu.hatif.util.UrlMethod;
 import itu.hatif.util.Util;
 import jakarta.servlet.*;
@@ -44,49 +45,45 @@ public class FrontControllerServlet extends HttpServlet {
     public void ProcessRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
                 
-                        response.setContentType("text/html");
-                
-                        PrintWriter out = response.getWriter();
-                        out.println("<html>");
-                        out.println("<head><title>List Class Controller </title></head>");
-                        out.println("<body>");
-                        
-                        String url = request.getRequestURI().substring(request.getContextPath().length());
-                        String httpmethod = request.getMethod();
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
 
-                        UrlMethod methodUrl = new UrlMethod(httpmethod, url);
+        String url = request.getRequestURI().substring(request.getContextPath().length());
+        String httpmethod = request.getMethod();
 
-                        Mapping mapping = mapUrlsControllers.get(methodUrl);
+        UrlMethod methodUrl = new UrlMethod(httpmethod, url);
+        Mapping mapping = mapUrlsControllers.get(methodUrl);
                         
         if(mapping != null) {
 
             
             try {
 
-                invokeMethod(mapping);
-                Class<?> clazz = Class.forName(mapping.getClassName());
-                
-                        out.println("<h1> Controller : " + clazz.getSimpleName() + "</h1>");
+                System.out.println(mapping.getClassName());
+                System.out.println(mapping.getMethodName());
 
-                        out.println("<h2> Method : </h2>");
-                        
-                        for (Method method : clazz.getDeclaredMethods()) {
-                            
-                            if (method.isAnnotationPresent(GetUrl.class)) {
-                                
-                                GetUrl annotation = method.getAnnotation(GetUrl.class);
-                                String urlAnnotation = annotation.url();
-                                String methodhttp = annotation.method();
+                Object result = invokeMethod(mapping);
 
-                                out.println("<p> -> Method : " + method.getName() + " - URL : " + methodhttp + "    / " + urlAnnotation + "</p>");
-                            }
-                        
-                        }
+                if (result instanceof ModelAndView) {
+                    
+                    ModelAndView modelAndView = (ModelAndView) result;
+
+                    for (Map.Entry<String, Object> entry : modelAndView.getAttribute().entrySet()) {
+
+                        request.setAttribute(entry.getKey(), entry.getValue());
+                    
+                    }
+
+                    RequestDispatcher dispatcher = request.getRequestDispatcher(modelAndView.getView());
+                    dispatcher.forward(request, response);
+
+                }
                         
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                } else {
+                    
+        } else {
                     
                     out.println("<h1> No controller found for URL: " + url + "</h1>");
                     
@@ -96,7 +93,9 @@ public class FrontControllerServlet extends HttpServlet {
             out.println("</html>");
     }
 
-    public void invokeMethod(Mapping mapping) {
+    public Object invokeMethod(Mapping mapping) {
+
+        Object result = null;
 
         try {
 
@@ -106,12 +105,13 @@ public class FrontControllerServlet extends HttpServlet {
 
             Method method = clazz.getDeclaredMethod(mapping.getMethodName());
 
-            method.invoke(controller);
+            result = method.invoke(controller);
 
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
 
+        return result;
     }
 
 }
